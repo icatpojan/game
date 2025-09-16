@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Game Mengetik Cepat</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background: #111;
+            color: white;
+            overflow: hidden;
+        }
+
+        #game {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .circle {
+            position: absolute;
+            top: -60px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: crimson;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+        }
+
+        #input {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            font-size: 18px;
+            width: 300px;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        #overlay button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .correct {
+            color: #0f0;
+        }
+
+        .wrong {
+            color: #f33;
+        }
+
+        .pending {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game"></div>
+    <input id="input" placeholder="Klik di sini untuk mulai..." disabled />
+    <div id="status">Skor: 0 | Highscore: 0</div>
+
+    <div id="overlay">
+        <div id="gameoverText">Pilih tingkat kesulitan:</div>
+        <div id="difficultyButtons">
+            <button onclick="setDifficulty('easy')">Mudah</button>
+            <button onclick="setDifficulty('medium')">Sedang</button>
+            <button onclick="setDifficulty('hard')">Sulit</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <button onclick="window.location.href='index.html'" style="background: #666;">Kembali ke Menu</button>
+        </div>
+    </div>
+
+    <script>
+        const game = document.getElementById("game");
+        const input = document.getElementById("input");
+        const statusText = document.getElementById("status");
+        const overlay = document.getElementById("overlay");
+        const gameoverText = document.getElementById("gameoverText");
+
+        const words = [
+            // Programming Languages
+            "javascript", "python", "java", "csharp", "php", "ruby", "go", "rust", "swift", "kotlin",
+            "typescript", "dart", "scala", "clojure", "haskell", "erlang", "elixir", "fsharp", "ocaml",
+            "perl", "lua", "r", "matlab", "octave", "fortran", "cobol", "pascal", "ada", "prolog",
+
+            // Web Development
+            "html", "css", "react", "vue", "angular", "svelte", "jquery", "bootstrap", "tailwind",
+            "nodejs", "express", "nextjs", "nuxt", "gatsby", "webpack", "vite", "parcel", "rollup",
+            "babel", "eslint", "prettier", "sass", "less", "stylus", "postcss", "autoprefixer",
+
+            // Databases
+            "mysql", "postgresql", "mongodb", "redis", "sqlite", "oracle", "sqlserver", "mariadb",
+            "cassandra", "elasticsearch", "dynamodb", "couchdb", "neo4j", "influxdb", "clickhouse",
+
+            // Frameworks & Libraries
+            "django", "flask", "fastapi", "spring", "laravel", "symfony", "rails", "sinatra",
+            "gin", "echo", "fiber", "actix", "rocket", "axum", "tower", "tokio", "async",
+            "tensorflow", "pytorch", "keras", "scikit", "pandas", "numpy", "matplotlib", "seaborn",
+
+            // Tools & Technologies
+            "docker", "kubernetes", "jenkins", "gitlab", "github", "bitbucket", "git", "svn",
+            "aws", "azure", "gcp", "heroku", "vercel", "netlify", "cloudflare", "digitalocean",
+            "nginx", "apache", "traefik", "haproxy", "consul", "vault", "nomad", "terraform",
+
+            // Programming Concepts
+            "algorithm", "function", "variable", "constant", "array", "object", "class", "method",
+            "inheritance", "polymorphism", "encapsulation", "abstraction", "interface", "abstract",
+            "recursion", "iteration", "loop", "condition", "statement", "expression", "operator",
+
+            // Data Structures
+            "stack", "queue", "tree", "graph", "hash", "heap", "list", "set", "map", "dictionary",
+            "linkedlist", "binarytree", "bst", "avl", "redblack", "trie", "segment", "fenwick",
+
+            // Design Patterns
+            "singleton", "factory", "observer", "strategy", "decorator", "adapter", "facade",
+            "proxy", "command", "state", "template", "builder", "prototype", "bridge", "composite",
+
+            // Testing
+            "unit", "integration", "e2e", "test", "mock", "stub", "spy", "coverage", "tdd", "bdd",
+            "jest", "mocha", "chai", "cypress", "playwright", "selenium", "pytest", "unittest",
+
+            // DevOps
+            "ci", "cd", "pipeline", "deployment", "monitoring", "logging", "metrics", "alerting",
+            "prometheus", "grafana", "jaeger", "zipkin", "fluentd", "logstash", "kibana", "splunk",
+
+            // Security
+            "authentication", "authorization", "encryption", "hashing", "jwt", "oauth", "saml",
+            "csrf", "xss", "sql", "injection", "cors", "https", "ssl", "tls", "certificate",
+
+            // Mobile Development
+            "android", "ios", "flutter", "reactnative", "xamarin", "cordova", "ionic", "expo",
+            "gradle", "cocoapods", "fastlane", "appstore", "playstore", "fcm", "apns", "deep",
+
+            // AI/ML
+            "machine", "learning", "deep", "neural", "network", "regression", "classification",
+            "clustering", "nlp", "computer", "vision", "reinforcement", "supervised", "unsupervised",
+            "gradient", "descent", "backpropagation", "convolutional", "recurrent", "transformer",
+
+            // Cloud & Infrastructure
+            "microservice", "api", "rest", "graphql", "grpc", "message", "queue", "event", "streaming",
+            "serverless", "lambda", "function", "container", "orchestration", "service", "mesh",
+            "load", "balancer", "cdn", "edge", "computing", "distributed", "system", "scalability",
+
+            // Version Control
+            "commit", "push", "pull", "merge", "rebase", "branch", "tag", "fork", "clone", "fetch",
+            "cherry", "pick", "squash", "stash", "reset", "revert", "blame", "log", "diff", "patch",
+
+            // Development Practices
+            "agile", "scrum", "kanban", "sprint", "retrospective", "standup", "planning", "review",
+            "refactoring", "code", "review", "pair", "programming", "mob", "programming", "extreme",
+
+            // Short Technical Terms
+            "api", "url", "uri", "http", "https", "json", "xml", "yaml", "toml", "ini", "env",
+            "config", "env", "dev", "prod", "staging", "test", "debug", "log", "error", "warn",
+            "info", "trace", "fatal", "panic", "exception", "throw", "catch", "try", "finally",
+            "async", "await", "promise", "callback", "event", "listener", "handler", "middleware",
+            "router", "controller", "service", "repository", "model", "view", "component", "hook",
+            "state", "props", "context", "reducer", "action", "dispatch", "selector", "memo",
+            "ref", "effect", "mount", "unmount", "update", "render", "paint", "layout", "reflow"
+        ];
+        let circles = [];
+        let score = 0;
+        let highscore = localStorage.getItem("highscore") || 0;
+        let gameOver = true;
+        let spawnInterval;
+        let spawnRate = 2000;
+        let speedMultiplier = 1;
+
+        // Tampilkan highscore saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function () {
+            statusText.textContent = `Skor: ${score} | Highscore: ${highscore}`;
+        });
+
+        function setDifficulty(level) {
+            if (level === "easy") {
+                spawnRate = 2500;
+                speedMultiplier = 0.8;
+            } else if (level === "medium") {
+                spawnRate = 2000;
+                speedMultiplier = 1.2;
+            } else if (level === "hard") {
+                spawnRate = 1200;
+                speedMultiplier = 1.8;
+            }
+            // sembunyikan overlay biar input bisa diklik
+            overlay.style.display = "none";
+            input.disabled = false;
+            input.placeholder = "Ketik kata yang muncul...";
+            gameoverText.textContent = "";
+            startGame();
+        }
+
+        function createCircle() {
+            if (gameOver) return;
+            const circle = document.createElement("div");
+            circle.className = "circle";
+            circle.word = words[Math.floor(Math.random() * words.length)];
+            circle.innerHTML = renderWord(circle.word, "");
+            circle.style.left = Math.random() * (window.innerWidth - 120) + "px";
+            circle.y = -60;
+            circle.speed = (1 + Math.random() * 2) * speedMultiplier;
+            game.appendChild(circle);
+            circles.push(circle);
+        }
+
+        function renderWord(word, typed) {
+            let html = "";
+            for (let i = 0; i < word.length; i++) {
+                if (i < typed.length) {
+                    html += word[i] === typed[i] ?
+                        `<span class="correct">${word[i]}</span>` :
+                        `<span class="wrong">${word[i]}</span>`;
+                } else {
+                    html += `<span class="pending">${word[i]}</span>`;
+                }
+            }
+            return html;
+        }
+
+        function update() {
+            if (gameOver) return;
+            circles.forEach((circle, index) => {
+                circle.y += circle.speed;
+                circle.style.top = circle.y + "px";
+                if (circle.y > window.innerHeight - 100) {
+                    endGame();
+                }
+            });
+            requestAnimationFrame(update);
+        }
+
+        function endGame() {
+            gameOver = true;
+            clearInterval(spawnInterval);
+            if (score > highscore) {
+                highscore = score;
+                localStorage.setItem("highscore", highscore);
+            }
+            overlay.style.display = "flex";
+            gameoverText.textContent = `Game Over! Skor: ${score} | Highscore: ${highscore}`;
+            input.disabled = true;
+
+            // Sembunyikan tombol difficulty dan tampilkan tombol restart
+            const difficultyButtons = document.getElementById("difficultyButtons");
+            difficultyButtons.style.display = "none";
+
+            // Hapus tombol restart lama jika ada
+            const oldRestartButton = overlay.querySelector("button[onclick*='Main Lagi']");
+            if (oldRestartButton) oldRestartButton.remove();
+
+            addRestartButton();
+        }
+
+        function startGame() {
+            game.innerHTML = "";
+            input.value = "";
+            score = 0;
+            circles = [];
+            gameOver = false;
+            statusText.textContent = `Skor: ${score} | Highscore: ${highscore}`;
+            spawnInterval = setInterval(() => createCircle(), spawnRate);
+            update();
+        }
+
+        input.addEventListener("input", () => {
+            if (gameOver) return;
+            const value = input.value.trim().toLowerCase();
+
+            // Update tampilan untuk semua circle berdasarkan input saat ini
+            circles.forEach((circle, index) => {
+                const word = circle.word.toLowerCase();
+                circle.innerHTML = renderWord(circle.word, value);
+            });
+
+            // Cari circle yang cocok dengan input lengkap
+            let matchedIndex = -1;
+            for (let i = 0; i < circles.length; i++) {
+                const word = circles[i].word.toLowerCase();
+                if (word === value && value.length > 0) {
+                    matchedIndex = i;
+                    break;
+                }
+            }
+
+            // Jika ada yang cocok, hapus circle tersebut
+            if (matchedIndex !== -1) {
+                const matchedCircle = circles[matchedIndex];
+                game.removeChild(matchedCircle);
+                circles.splice(matchedIndex, 1);
+                score++;
+                statusText.textContent = `Skor: ${score} | Highscore: ${highscore}`;
+                input.value = "";
+
+                // Reset tampilan semua circle yang tersisa
+                circles.forEach(circle => {
+                    circle.innerHTML = renderWord(circle.word, "");
+                });
+            }
+        });
+
+        input.addEventListener("focus", () => {
+            if (gameOver && overlay.style.display === "none") {
+                startGame();
+            }
+        });
+
+        // Tambahkan tombol restart di overlay
+        function addRestartButton() {
+            const restartButton = document.createElement("button");
+            restartButton.textContent = "Main Lagi";
+            restartButton.onclick = () => {
+                // Reset tampilan overlay
+                gameoverText.textContent = "Pilih tingkat kesulitan:";
+                const difficultyButtons = document.getElementById("difficultyButtons");
+                difficultyButtons.style.display = "block";
+
+                // Hapus tombol restart
+                restartButton.remove();
+
+                input.disabled = true;
+                input.value = "";
+            };
+            overlay.appendChild(restartButton);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Simulator - Exchange Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .trading-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            grid-template-rows: 60px 1fr 200px;
+            height: 100vh;
+            gap: 1px;
+            background: #1a1a1a;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00d4aa;
+        }
+
+        .balance-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .balance-item {
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .balance-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .balance-value.positive {
+            color: #00d4aa;
+        }
+
+        .balance-value.negative {
+            color: #ff4757;
+        }
+
+        /* Main Chart Area */
+        .chart-section {
+            background: #0a0a0a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pair-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pair-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .current-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00d4aa;
+        }
+
+        .price-change {
+            font-size: 0.9rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .price-change.positive {
+            background: rgba(0, 212, 170, 0.2);
+            color: #00d4aa;
+        }
+
+        .price-change.negative {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .timeframe-btn {
+            padding: 5px 12px;
+            background: #333;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .timeframe-btn.active {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .chart-type-selector {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .chart-type-btn {
+            padding: 5px 10px;
+            background: #333;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .chart-type-btn.active {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .chart-container {
+            position: relative;
+            height: calc(100% - 80px);
+            background: #000;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .chart-container:active {
+            cursor: grabbing;
+        }
+
+        #tradingChart {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .chart-controls-bottom {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .chart-btn {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .chart-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .drawing-tools {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .drawing-btn {
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .drawing-btn.active {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .drawing-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .position-marker {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        .position-marker.long {
+            background: #00d4aa;
+            border: 2px solid #fff;
+        }
+
+        .position-marker.short {
+            background: #ff4757;
+            border: 2px solid #fff;
+        }
+
+        /* Trading Panel */
+        .trading-panel {
+            background: #1a1a1a;
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid #333;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            background: #222;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #00d4aa;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        /* Order Form */
+        .order-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .form-input {
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00d4aa;
+        }
+
+        .leverage-selector {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        .leverage-btn {
+            padding: 8px;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .leverage-btn.active {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .leverage-input {
+            grid-column: 1 / -1;
+            margin-top: 5px;
+        }
+
+        .order-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .order-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .buy-btn {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .sell-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .order-btn:hover {
+            opacity: 0.8;
+        }
+
+        .order-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Positions List */
+        .positions-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .position-item {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            font-size: 0.8rem;
+        }
+
+        .position-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .position-type {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .position-type.long {
+            background: rgba(0, 212, 170, 0.2);
+            color: #00d4aa;
+        }
+
+        .position-type.short {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+
+        .position-pnl {
+            font-weight: bold;
+        }
+
+        .position-pnl.positive {
+            color: #00d4aa;
+        }
+
+        .position-pnl.negative {
+            color: #ff4757;
+        }
+
+        .position-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .close-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-top: 5px;
+        }
+
+        .close-btn:hover {
+            background: #ff3742;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #222;
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .trading-container {
+                grid-template-columns: 1fr 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .trading-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr 300px;
+            }
+
+            .trading-panel {
+                border-left: none;
+                border-top: 1px solid #333;
+            }
+
+            .balance-info {
+                gap: 15px;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="trading-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">📈 Trading Simulator</div>
+            <div class="balance-info">
+                <div class="balance-item">
+                    <div class="balance-label">Saldo</div>
+                    <div class="balance-value" id="balance">$10,000.00</div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">Equity</div>
+                    <div class="balance-value" id="equity">$10,000.00</div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">P&L</div>
+                    <div class="balance-value" id="totalPnl">$0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <div class="pair-info">
+                    <div class="pair-name">BTC/USDT</div>
+                    <div class="current-price" id="currentPrice">$45,250.00</div>
+                    <div class="price-change positive" id="priceChange">+1,250.00 (+2.84%)</div>
+                </div>
+                <div class="chart-controls">
+                    <button class="timeframe-btn active">1m</button>
+                    <button class="timeframe-btn">5m</button>
+                    <button class="timeframe-btn">15m</button>
+                    <button class="timeframe-btn">1h</button>
+                    <div class="chart-type-selector">
+                        <button class="chart-type-btn active" id="candleBtn">Candle</button>
+                        <button class="chart-type-btn" id="lineBtn">Line</button>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container" id="chartContainer">
+                <canvas id="tradingChart"></canvas>
+                <div class="drawing-tools">
+                    <button class="drawing-btn" id="lineTool">Line</button>
+                    <button class="drawing-btn" id="horizontalLineTool">H-Line</button>
+                    <button class="drawing-btn" id="verticalLineTool">V-Line</button>
+                    <button class="drawing-btn" id="clearDrawings">Clear</button>
+                </div>
+                <div class="chart-controls-bottom">
+                    <button class="chart-btn" id="zoomIn">+</button>
+                    <button class="chart-btn" id="zoomOut">-</button>
+                    <button class="chart-btn" id="resetZoom">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Panel -->
+        <div class="trading-panel">
+            <!-- Order Form -->
+            <div class="panel-section">
+                <div class="panel-header">📊 Order</div>
+                <div class="panel-content">
+                    <form class="order-form" id="orderForm">
+                        <div class="form-group">
+                            <label class="form-label">Jumlah (USDT)</label>
+                            <input type="number" class="form-input" id="orderAmount" value="100" min="10" step="10">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Leverage</label>
+                            <div class="leverage-selector">
+                                <button type="button" class="leverage-btn" data-leverage="1">1x</button>
+                                <button type="button" class="leverage-btn" data-leverage="2">2x</button>
+                                <button type="button" class="leverage-btn" data-leverage="5">5x</button>
+                                <button type="button" class="leverage-btn" data-leverage="10">10x</button>
+                                <button type="button" class="leverage-btn" data-leverage="20">20x</button>
+                                <button type="button" class="leverage-btn" data-leverage="50">50x</button>
+                                <button type="button" class="leverage-btn" data-leverage="100">100x</button>
+                                <button type="button" class="leverage-btn" data-leverage="125">125x</button>
+                                <input type="number" class="form-input leverage-input" id="customLeverage"
+                                    placeholder="Custom (1-125)" min="1" max="125">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Take Profit (%)</label>
+                            <input type="number" class="form-input" id="takeProfit" value="5" min="0.1" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Stop Loss (%)</label>
+                            <input type="number" class="form-input" id="stopLoss" value="3" min="0.1" step="0.1">
+                        </div>
+
+                        <div class="order-buttons">
+                            <button type="button" class="order-btn buy-btn" id="buyBtn">BUY LONG</button>
+                            <button type="button" class="order-btn sell-btn" id="sellBtn">SELL SHORT</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Positions -->
+            <div class="panel-section">
+                <div class="panel-header">📋 Posisi Aktif (<span id="positionCount">0</span>)</div>
+                <div class="panel-content">
+                    <div class="positions-list" id="positionsList">
+                        <div style="text-align: center; color: #888; padding: 20px;">
+                            Belum ada posisi aktif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="panel-section">
+                <div class="panel-header">📈 Statistik</div>
+                <div class="panel-content">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Total Trades</div>
+                            <div class="stat-value" id="totalTrades">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Win Rate</div>
+                            <div class="stat-value" id="winRate">0%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Profit Terbesar</div>
+                            <div class="stat-value" id="maxProfit">$0.00</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Loss Terbesar</div>
+                            <div class="stat-value" id="maxLoss">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let balance = 10000;
+        let equity = 10000;
+        let totalPnl = 0;
+        let currentPrice = 45250;
+        let priceHistory = [];
+        let candleData = [];
+        let positions = [];
+        let totalTrades = 0;
+        let winningTrades = 0;
+        let maxProfit = 0;
+        let maxLoss = 0;
+        let selectedLeverage = 5;
+        let chartUpdateInterval;
+        let currentTimeframe = '1m';
+        let chartType = 'candle'; // 'candle' or 'line'
+
+        // Chart zoom and pan
+        let chartZoom = 1;
+        let chartPan = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let visibleCandles = 100;
+        let rightPadding = 50; // Add padding to the right
+
+        // Drawing tools
+        let drawingMode = null;
+        let drawings = [];
+        let isDrawing = false;
+        let drawingStart = null;
+        let drawingEnd = null;
+
+        // Chart setup
+        const canvas = document.getElementById('tradingChart');
+        const ctx = canvas.getContext('2d');
+
+        // Initialize
+        function init() {
+            setupCanvas();
+            setupEventListeners();
+            generateInitialPriceHistory();
+            startPriceUpdates();
+            updateDisplay();
+            drawChart();
+        }
+
+        // Setup canvas
+        function setupCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Leverage buttons
+            document.querySelectorAll('.leverage-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.leverage-btn').forEach(b => b.classList.remove(
+                        'active'));
+                    btn.classList.add('active');
+                    selectedLeverage = parseInt(btn.dataset.leverage);
+                    document.getElementById('customLeverage').value = '';
+                });
+            });
+
+            // Custom leverage input
+            document.getElementById('customLeverage').addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                if (value >= 1 && value <= 125) {
+                    selectedLeverage = value;
+                    document.querySelectorAll('.leverage-btn').forEach(b => b.classList.remove('active'));
+                }
+            });
+
+            // Timeframe buttons
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove(
+                        'active'));
+                    btn.classList.add('active');
+                    currentTimeframe = btn.textContent;
+                    generateCandleData();
+                });
+            });
+
+            // Chart type buttons
+            document.getElementById('candleBtn').addEventListener('click', () => {
+                chartType = 'candle';
+                document.getElementById('candleBtn').classList.add('active');
+                document.getElementById('lineBtn').classList.remove('active');
+                drawChart();
+            });
+
+            document.getElementById('lineBtn').addEventListener('click', () => {
+                chartType = 'line';
+                document.getElementById('lineBtn').classList.add('active');
+                document.getElementById('candleBtn').classList.remove('active');
+                drawChart();
+            });
+
+            // Order buttons
+            document.getElementById('buyBtn').addEventListener('click', () => openPosition('long'));
+            document.getElementById('sellBtn').addEventListener('click', () => openPosition('short'));
+
+            // Chart controls
+            document.getElementById('zoomIn').addEventListener('click', () => {
+                chartZoom = Math.min(chartZoom * 1.2, 5);
+                visibleCandles = Math.max(50, visibleCandles / 1.2);
+                drawChart();
+            });
+
+            document.getElementById('zoomOut').addEventListener('click', () => {
+                chartZoom = Math.max(chartZoom / 1.2, 0.5);
+                visibleCandles = Math.min(200, visibleCandles * 1.2);
+                drawChart();
+            });
+
+            document.getElementById('resetZoom').addEventListener('click', () => {
+                chartZoom = 1;
+                chartPan = 0;
+                visibleCandles = 100;
+                drawChart();
+            });
+
+            // Drawing tools
+            document.getElementById('lineTool').addEventListener('click', () => {
+                drawingMode = 'line';
+                document.querySelectorAll('.drawing-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('lineTool').classList.add('active');
+            });
+
+            document.getElementById('horizontalLineTool').addEventListener('click', () => {
+                drawingMode = 'horizontal';
+                document.querySelectorAll('.drawing-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('horizontalLineTool').classList.add('active');
+            });
+
+            document.getElementById('verticalLineTool').addEventListener('click', () => {
+                drawingMode = 'vertical';
+                document.querySelectorAll('.drawing-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('verticalLineTool').classList.add('active');
+            });
+
+            document.getElementById('clearDrawings').addEventListener('click', () => {
+                drawings = [];
+                document.querySelectorAll('.drawing-btn').forEach(b => b.classList.remove('active'));
+                drawChart();
+            });
+
+            // Chart mouse events
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.addEventListener('mousedown', (e) => {
+                if (drawingMode) {
+                    isDrawing = true;
+                    const rect = canvas.getBoundingClientRect();
+                    drawingStart = {
+                        x: e.clientX - rect.left,
+                        y: e.clientY - rect.top
+                    };
+                } else {
+                    isDragging = true;
+                    lastMouseX = e.clientX;
+                    chartContainer.style.cursor = 'grabbing';
+                }
+            });
+
+            chartContainer.addEventListener('mousemove', (e) => {
+                if (isDrawing && drawingStart) {
+                    const rect = canvas.getBoundingClientRect();
+                    drawingEnd = {
+                        x: e.clientX - rect.left,
+                        y: e.clientY - rect.top
+                    };
+                    drawChart();
+                } else if (isDragging) {
+                    const deltaX = e.clientX - lastMouseX;
+                    chartPan += deltaX;
+                    lastMouseX = e.clientX;
+                    drawChart();
+                }
+            });
+
+            chartContainer.addEventListener('mouseup', (e) => {
+                if (isDrawing && drawingStart && drawingEnd) {
+                    // Save drawing
+                    drawings.push({
+                        type: drawingMode,
+                        start: drawingStart,
+                        end: drawingEnd,
+                        color: '#00d4aa'
+                    });
+                    isDrawing = false;
+                    drawingStart = null;
+                    drawingEnd = null;
+                } else {
+                    isDragging = false;
+                    chartContainer.style.cursor = 'grab';
+                }
+            });
+
+            chartContainer.addEventListener('mouseleave', () => {
+                isDragging = false;
+                isDrawing = false;
+                drawingStart = null;
+                drawingEnd = null;
+                chartContainer.style.cursor = 'grab';
+            });
+
+            // Window resize
+            window.addEventListener('resize', setupCanvas);
+        }
+
+        // Generate initial price history
+        function generateInitialPriceHistory() {
+            const basePrice = 45000;
+            priceHistory = [];
+
+            for (let i = 0; i < 200; i++) {
+                const volatility = 0.02;
+                const trend = (Math.random() - 0.5) * 0.001;
+                const randomChange = (Math.random() - 0.5) * volatility;
+                const change = trend + randomChange;
+
+                const price = basePrice * (1 + change * i / 200);
+                priceHistory.push(price);
+            }
+
+            currentPrice = priceHistory[priceHistory.length - 1];
+            generateCandleData();
+        }
+
+        // Generate candle data
+        function generateCandleData() {
+            candleData = [];
+            const basePrice = 45000;
+            const candleCount = 500; // More candles for better zoom/pan experience
+
+            for (let i = 0; i < candleCount; i++) {
+                const volatility = 0.02;
+                const trend = (Math.random() - 0.5) * 0.001;
+                const randomChange = (Math.random() - 0.5) * volatility;
+                const change = trend + randomChange;
+
+                const open = i === 0 ? basePrice : candleData[i - 1].close;
+                const close = open * (1 + change);
+                const high = Math.max(open, close) * (1 + Math.random() * 0.01);
+                const low = Math.min(open, close) * (1 - Math.random() * 0.01);
+
+                candleData.push({
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close,
+                    timestamp: Date.now() - (candleCount - i) * 60000 // 1 minute intervals
+                });
+            }
+
+            currentPrice = candleData[candleData.length - 1].close;
+        }
+
+        // Start price updates
+        function startPriceUpdates() {
+            chartUpdateInterval = setInterval(() => {
+                updatePrice();
+                updatePositions();
+                drawChart();
+                updateDisplay();
+            }, 1000);
+        }
+
+        // Update price
+        function updatePrice() {
+            const volatility = 0.01;
+            const trend = (Math.random() - 0.5) * 0.0005;
+            const randomChange = (Math.random() - 0.5) * volatility;
+            const change = trend + randomChange;
+
+            const newPrice = currentPrice * (1 + change);
+            currentPrice = newPrice;
+
+            // Update last candle or create new one
+            if (candleData.length > 0) {
+                const lastCandle = candleData[candleData.length - 1];
+                lastCandle.close = newPrice;
+                lastCandle.high = Math.max(lastCandle.high, newPrice);
+                lastCandle.low = Math.min(lastCandle.low, newPrice);
+            }
+
+            // Keep only last 500 candles
+            if (candleData.length > 500) {
+                candleData.shift();
+            }
+        }
+
+        // Draw chart
+        function drawChart() {
+            const rect = canvas.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Clear all position markers
+            document.querySelectorAll('.position-marker').forEach(marker => marker.remove());
+
+            if (candleData.length < 2) return;
+
+            // Calculate visible range
+            const startIndex = Math.max(0, candleData.length - visibleCandles - Math.floor(chartPan / 10));
+            const endIndex = Math.min(candleData.length, startIndex + visibleCandles);
+            const visibleCandlesData = candleData.slice(startIndex, endIndex);
+
+            if (visibleCandlesData.length < 2) return;
+
+            // Find price range
+            const allPrices = visibleCandlesData.flatMap(candle => [candle.high, candle.low]);
+            const minPrice = Math.min(...allPrices);
+            const maxPrice = Math.max(...allPrices);
+            const priceRange = maxPrice - minPrice;
+            const padding = priceRange * 0.1;
+            const adjustedMin = minPrice - padding;
+            const adjustedMax = maxPrice + padding;
+            const adjustedRange = adjustedMax - adjustedMin;
+
+            // Calculate chart dimensions with right padding
+            const chartWidth = rect.width - rightPadding;
+            const chartHeight = rect.height;
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+
+            // Horizontal lines
+            for (let i = 0; i <= 4; i++) {
+                const y = (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(chartWidth, y);
+                ctx.stroke();
+            }
+
+            // Vertical lines
+            for (let i = 0; i <= 8; i++) {
+                const x = (chartWidth / 8) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, chartHeight);
+                ctx.stroke();
+            }
+
+            if (chartType === 'candle') {
+                // Draw candlesticks
+                const candleWidth = chartWidth / visibleCandlesData.length * 0.8;
+                const candleSpacing = chartWidth / visibleCandlesData.length;
+
+                visibleCandlesData.forEach((candle, index) => {
+                    const x = index * candleSpacing + candleSpacing * 0.1;
+                    const centerX = x + candleWidth / 2;
+
+                    // Calculate Y positions
+                    const openY = chartHeight - ((candle.open - adjustedMin) / adjustedRange) * chartHeight;
+                    const closeY = chartHeight - ((candle.close - adjustedMin) / adjustedRange) * chartHeight;
+                    const highY = chartHeight - ((candle.high - adjustedMin) / adjustedRange) * chartHeight;
+                    const lowY = chartHeight - ((candle.low - adjustedMin) / adjustedRange) * chartHeight;
+
+                    // Determine candle color
+                    const isGreen = candle.close >= candle.open;
+                    ctx.fillStyle = isGreen ? '#00d4aa' : '#ff4757';
+                    ctx.strokeStyle = isGreen ? '#00d4aa' : '#ff4757';
+
+                    // Draw wick (high-low line)
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, highY);
+                    ctx.lineTo(centerX, lowY);
+                    ctx.stroke();
+
+                    // Draw body
+                    const bodyHeight = Math.abs(closeY - openY);
+                    const bodyTop = Math.min(openY, closeY);
+
+                    if (bodyHeight > 0) {
+                        ctx.fillRect(x, bodyTop, candleWidth, bodyHeight);
+                        ctx.strokeRect(x, bodyTop, candleWidth, bodyHeight);
+                    } else {
+                        // Doji - draw horizontal line
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(x, openY);
+                        ctx.lineTo(x + candleWidth, openY);
+                        ctx.stroke();
+                    }
+                });
+            } else {
+                // Draw line chart
+                ctx.strokeStyle = '#00d4aa';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                visibleCandlesData.forEach((candle, index) => {
+                    const x = (index / (visibleCandlesData.length - 1)) * chartWidth;
+                    const y = chartHeight - ((candle.close - adjustedMin) / adjustedRange) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                // Draw current price indicator
+                const lastIndex = visibleCandlesData.length - 1;
+                const lastX = (lastIndex / (visibleCandlesData.length - 1)) * chartWidth;
+                const lastY = chartHeight - ((visibleCandlesData[lastIndex].close - adjustedMin) / adjustedRange) *
+                    chartHeight;
+
+                ctx.fillStyle = '#00d4aa';
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            // Draw position markers
+            positions.forEach(position => {
+                const candleIndex = visibleCandlesData.findIndex(candle =>
+                    Math.abs(candle.timestamp - position.timestamp.getTime()) < 60000
+                );
+
+                if (candleIndex !== -1) {
+                    let x, y;
+                    if (chartType === 'candle') {
+                        const candleSpacing = chartWidth / visibleCandlesData.length;
+                        const candleWidth = chartWidth / visibleCandlesData.length * 0.8;
+                        x = candleIndex * candleSpacing + candleSpacing * 0.1 + candleWidth / 2;
+                    } else {
+                        x = (candleIndex / (visibleCandlesData.length - 1)) * chartWidth;
+                    }
+                    y = chartHeight - ((position.entryPrice - adjustedMin) / adjustedRange) * chartHeight;
+
+                    // Create marker element if it doesn't exist
+                    let marker = document.querySelector(`[data-position-id="${position.id}"]`);
+                    if (!marker) {
+                        marker = document.createElement('div');
+                        marker.className = `position-marker ${position.type}`;
+                        marker.setAttribute('data-position-id', position.id);
+                        document.getElementById('chartContainer').appendChild(marker);
+                    }
+
+                    // Position marker
+                    marker.style.left = `${x - 4}px`;
+                    marker.style.top = `${y - 4}px`;
+                    marker.style.display = 'block';
+                }
+            });
+
+            // Draw saved drawings
+            drawings.forEach(drawing => {
+                ctx.strokeStyle = drawing.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                if (drawing.type === 'line') {
+                    ctx.moveTo(drawing.start.x, drawing.start.y);
+                    ctx.lineTo(drawing.end.x, drawing.end.y);
+                } else if (drawing.type === 'horizontal') {
+                    ctx.moveTo(0, drawing.start.y);
+                    ctx.lineTo(chartWidth, drawing.start.y);
+                } else if (drawing.type === 'vertical') {
+                    ctx.moveTo(drawing.start.x, 0);
+                    ctx.lineTo(drawing.start.x, chartHeight);
+                }
+
+                ctx.stroke();
+            });
+
+            // Draw current drawing
+            if (isDrawing && drawingStart && drawingEnd) {
+                ctx.strokeStyle = '#00d4aa';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+
+                if (drawingMode === 'line') {
+                    ctx.moveTo(drawingStart.x, drawingStart.y);
+                    ctx.lineTo(drawingEnd.x, drawingEnd.y);
+                } else if (drawingMode === 'horizontal') {
+                    ctx.moveTo(0, drawingStart.y);
+                    ctx.lineTo(chartWidth, drawingStart.y);
+                } else if (drawingMode === 'vertical') {
+                    ctx.moveTo(drawingStart.x, 0);
+                    ctx.lineTo(drawingStart.x, chartHeight);
+                }
+
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw price labels
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'right';
+
+            for (let i = 0; i <= 4; i++) {
+                const price = adjustedMin + (adjustedRange / 4) * i;
+                const y = (chartHeight / 4) * (4 - i);
+                ctx.fillText('$' + price.toFixed(0), chartWidth - 5, y - 5);
+            }
+        }
+
+        // Open position
+        function openPosition(type) {
+            const amount = parseFloat(document.getElementById('orderAmount').value);
+            const takeProfit = parseFloat(document.getElementById('takeProfit').value);
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value);
+
+            if (amount < 10) {
+                alert('Minimum order amount is $10');
+                return;
+            }
+
+            if (amount > balance) {
+                alert('Insufficient balance');
+                return;
+            }
+
+            const position = {
+                id: Date.now(),
+                type: type,
+                entryPrice: currentPrice,
+                amount: amount,
+                leverage: selectedLeverage,
+                takeProfit: takeProfit,
+                stopLoss: stopLoss,
+                timestamp: new Date(),
+                pnl: 0
+            };
+
+            positions.push(position);
+            balance -= amount;
+            totalTrades++;
+
+            updateDisplay();
+        }
+
+        // Update positions
+        function updatePositions() {
+            let totalPnlValue = 0;
+
+            positions.forEach(position => {
+                const priceChange = currentPrice - position.entryPrice;
+                const priceChangePercent = (priceChange / position.entryPrice) * 100;
+
+                let pnlPercent = 0;
+                if (position.type === 'long') {
+                    pnlPercent = priceChangePercent * position.leverage;
+                } else {
+                    pnlPercent = -priceChangePercent * position.leverage;
+                }
+
+                position.pnl = (position.amount * pnlPercent) / 100;
+                totalPnlValue += position.pnl;
+
+                // Check take profit
+                if (position.type === 'long' && priceChangePercent >= position.takeProfit) {
+                    closePosition(position.id, 'TP');
+                } else if (position.type === 'short' && -priceChangePercent >= position.takeProfit) {
+                    closePosition(position.id, 'TP');
+                }
+
+                // Check stop loss
+                if (position.type === 'long' && priceChangePercent <= -position.stopLoss) {
+                    closePosition(position.id, 'SL');
+                } else if (position.type === 'short' && -priceChangePercent <= -position.stopLoss) {
+                    closePosition(position.id, 'SL');
+                }
+            });
+
+            totalPnl = totalPnlValue;
+            equity = balance + totalPnl;
+        }
+
+        // Close position
+        function closePosition(positionId, reason) {
+            const positionIndex = positions.findIndex(p => p.id === positionId);
+            if (positionIndex === -1) return;
+
+            const position = positions[positionIndex];
+            balance += position.amount + position.pnl;
+
+            if (position.pnl > 0) {
+                winningTrades++;
+                maxProfit = Math.max(maxProfit, position.pnl);
+            } else {
+                maxLoss = Math.min(maxLoss, position.pnl);
+            }
+
+            // Remove position marker
+            const marker = document.querySelector(`[data-position-id="${positionId}"]`);
+            if (marker) {
+                marker.remove();
+            }
+
+            positions.splice(positionIndex, 1);
+            updateDisplay();
+        }
+
+        // Update display
+        function updateDisplay() {
+            // Update balance info
+            document.getElementById('balance').textContent = '$' + balance.toFixed(2);
+            document.getElementById('equity').textContent = '$' + equity.toFixed(2);
+
+            const pnlElement = document.getElementById('totalPnl');
+            pnlElement.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(2);
+            pnlElement.className = 'balance-value ' + (totalPnl >= 0 ? 'positive' : 'negative');
+
+            // Update current price
+            document.getElementById('currentPrice').textContent = '$' + currentPrice.toFixed(2);
+
+            // Update price change
+            if (candleData.length >= 2) {
+                const previousCandle = candleData[candleData.length - 2];
+                const change = currentPrice - previousCandle.close;
+                const changePercent = (change / previousCandle.close) * 100;
+
+                const changeElement = document.getElementById('priceChange');
+                changeElement.textContent =
+                    `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+                changeElement.className = 'price-change ' + (change >= 0 ? 'positive' : 'negative');
+            }
+
+            // Update positions
+            document.getElementById('positionCount').textContent = positions.length;
+            updatePositionsList();
+
+            // Update stats
+            document.getElementById('totalTrades').textContent = totalTrades;
+            const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+            document.getElementById('maxProfit').textContent = '$' + maxProfit.toFixed(2);
+            document.getElementById('maxLoss').textContent = '$' + maxLoss.toFixed(2);
+        }
+
+        // Update positions list
+        function updatePositionsList() {
+            const positionsList = document.getElementById('positionsList');
+
+            if (positions.length === 0) {
+                positionsList.innerHTML =
+                    '<div style="text-align: center; color: #888; padding: 20px;">Belum ada posisi aktif</div>';
+                return;
+            }
+
+            positionsList.innerHTML = positions.map(position => `
+                <div class="position-item">
+                    <div class="position-header">
+                        <span class="position-type ${position.type}">${position.type.toUpperCase()}</span>
+                        <span class="position-pnl ${position.pnl >= 0 ? 'positive' : 'negative'}">
+                            ${position.pnl >= 0 ? '+' : ''}$${position.pnl.toFixed(2)}
+                        </span>
+                    </div>
+                    <div class="position-details">
+                        <div>Entry: $${position.entryPrice.toFixed(2)}</div>
+                        <div>Amount: $${position.amount.toFixed(2)}</div>
+                        <div>Leverage: ${position.leverage}x</div>
+                        <div>TP: ${position.takeProfit}%</div>
+                        <div>SL: ${position.stopLoss}%</div>
+                        <div>Time: ${position.timestamp.toLocaleTimeString()}</div>
+                    </div>
+                    <button class="close-btn" onclick="closePosition(${position.id}, 'manual')">Close</button>
+                </div>
+            `).join('');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+
+</html>

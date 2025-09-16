@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tebak Warna</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .score {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .color-display {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .color-display:hover {
+            transform: scale(1.05);
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .option-btn {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .option-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .option-btn.correct {
+            background: #4CAF50;
+            animation: pulse 0.6s ease;
+        }
+
+        .option-btn.wrong {
+            background: #f44336;
+            animation: shake 0.6s ease;
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffd700;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            z-index: 1000;
+        }
+
+        .game-over.hidden {
+            display: none;
+        }
+
+        .restart-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            margin: 5px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: #4CAF50;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .color-display {
+                width: 250px;
+                height: 250px;
+            }
+
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn">← Kembali ke Menu</a>
+
+    <div class="game-container">
+        <div class="header">
+            <h1>🎨 Tebak Warna</h1>
+            <div class="score">Skor: <span id="score">0</span> | Highscore: <span id="highscore">0</span></div>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')">Mudah</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium')">Sedang</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')">Sulit</button>
+        </div>
+
+        <div class="timer" id="timer">30</div>
+
+        <div class="color-display" id="colorDisplay"></div>
+
+        <div class="options" id="options"></div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>Game Over!</h2>
+        <p>Skor Akhir: <span id="finalScore">0</span></p>
+        <p>Highscore: <span id="finalHighscore">0</span></p>
+        <button class="restart-btn" onclick="startGame()">Main Lagi</button>
+    </div>
+
+    <script>
+        const colors = [{
+                name: 'Merah',
+                hex: '#FF0000'
+            },
+            {
+                name: 'Biru',
+                hex: '#0000FF'
+            },
+            {
+                name: 'Hijau',
+                hex: '#00FF00'
+            },
+            {
+                name: 'Kuning',
+                hex: '#FFFF00'
+            },
+            {
+                name: 'Ungu',
+                hex: '#800080'
+            },
+            {
+                name: 'Orange',
+                hex: '#FFA500'
+            },
+            {
+                name: 'Pink',
+                hex: '#FFC0CB'
+            },
+            {
+                name: 'Coklat',
+                hex: '#A52A2A'
+            },
+            {
+                name: 'Abu-abu',
+                hex: '#808080'
+            },
+            {
+                name: 'Hitam',
+                hex: '#000000'
+            },
+            {
+                name: 'Putih',
+                hex: '#FFFFFF'
+            },
+            {
+                name: 'Cyan',
+                hex: '#00FFFF'
+            },
+            {
+                name: 'Magenta',
+                hex: '#FF00FF'
+            },
+            {
+                name: 'Lime',
+                hex: '#00FF00'
+            },
+            {
+                name: 'Navy',
+                hex: '#000080'
+            },
+            {
+                name: 'Teal',
+                hex: '#008080'
+            },
+            {
+                name: 'Maroon',
+                hex: '#800000'
+            },
+            {
+                name: 'Olive',
+                hex: '#808000'
+            },
+            {
+                name: 'Silver',
+                hex: '#C0C0C0'
+            },
+            {
+                name: 'Gold',
+                hex: '#FFD700'
+            }
+        ];
+
+        let currentColor;
+        let score = 0;
+        let highscore = localStorage.getItem('color_highscore') || 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let difficulty = 'easy';
+        let timer;
+
+        // Tampilkan highscore saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('highscore').textContent = highscore;
+        });
+
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (level === 'easy') {
+                timeLeft = 45;
+            } else if (level === 'medium') {
+                timeLeft = 30;
+            } else if (level === 'hard') {
+                timeLeft = 20;
+            }
+
+            if (gameActive) {
+                startGame();
+            }
+        }
+
+        function getRandomColor() {
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function generateOptions(correctColor) {
+            const options = [correctColor];
+            const otherColors = colors.filter(color => color.name !== correctColor.name);
+
+            // Pilih 3 warna acak lainnya
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * otherColors.length);
+                options.push(otherColors[randomIndex]);
+                otherColors.splice(randomIndex, 1);
+            }
+
+            // Acak urutan opsi
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function displayColor() {
+            currentColor = getRandomColor();
+            const colorDisplay = document.getElementById('colorDisplay');
+            colorDisplay.style.backgroundColor = currentColor.hex;
+
+            const options = generateOptions(currentColor);
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option.name;
+                button.onclick = () => checkAnswer(option.name === currentColor.name, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(isCorrect, button) {
+            if (!gameActive) return;
+
+            if (isCorrect) {
+                score++;
+                button.classList.add('correct');
+                document.getElementById('score').textContent = score;
+
+                setTimeout(() => {
+                    displayColor();
+                }, 500);
+            } else {
+                button.classList.add('wrong');
+                endGame();
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timer);
+
+            if (score > highscore) {
+                highscore = score;
+                localStorage.setItem('color_highscore', highscore);
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalHighscore').textContent = highscore;
+            document.getElementById('gameOver').classList.remove('hidden');
+        }
+
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            timeLeft = difficulty === 'easy' ? 45 : difficulty === 'medium' ? 30 : 20;
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('highscore').textContent = highscore;
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('gameOver').classList.add('hidden');
+
+            displayColor();
+            startTimer();
+        }
+
+        // Mulai game otomatis
+        startGame();
+    </script>
+</body>
+
+</html>

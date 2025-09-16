@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub - Koleksi Game Seru</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.3);
+            }
+
+            to {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 0.9;
+                transform: translateY(0);
+            }
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover .game-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .game-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .game-description {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .play-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .play-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(45deg, #ff5252, #d63031);
+        }
+
+        .play-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .play-button:active {
+            transform: translateY(0);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 50px;
+        }
+
+        .footer p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease-out 1s both;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffd700;
+            animation: bounce 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        #totalHighScore {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .score-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .score-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .game-card {
+                padding: 20px;
+            }
+
+            .stats {
+                gap: 20px;
+            }
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            top: 40%;
+            left: 80%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            width: 40px;
+            height: 40px;
+            top: 30%;
+            left: 20%;
+            animation-delay: 1s;
+        }
+
+        .shape:nth-child(5) {
+            width: 100px;
+            height: 100px;
+            top: 70%;
+            left: 70%;
+            animation-delay: 3s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape" style="width: 40px; height: 40px; top: 30%; left: 20%; animation-delay: 1s;"></div>
+        <div class="shape" style="width: 100px; height: 100px; top: 70%; left: 70%; animation-delay: 3s;"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="pulse">🎮 Anti-Boring Office Games</h1>
+            <p>Kerjaan udah selesai? Bosan nunggu instruksi selanjutnya? Main game dulu aja! Koleksi game seru buat
+                ngisi waktu gabut di kantor. Pilih game favoritmu dan mulai refreshing sekarang juga! 🚀</p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Game Tersedia</div>
+                </div>
+                <div class="stat-item" id="totalScoreItem" style="position: relative; cursor: pointer;"
+                    title="Klik untuk melihat detail high score">
+                    <div class="stat-number" id="totalHighScore">0</div>
+                    <div class="stat-label">Total High Score</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Anti-Boring</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Gratis</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">⚡</div>
+                    <div class="stat-label">Instant Fun</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <div
+                    style="background: linear-gradient(45deg, rgba(255,107,107,0.1), rgba(238,90,36,0.1)); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,107,107,0.2);">
+                    <h3 style="margin-bottom: 15px; font-size: 1.1rem;">🎯 Perfect untuk Situasi Kantor</h3>
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 5px;">⏰</div>
+                            <div style="font-size: 0.8rem; font-weight: 600;">Nunggu Meeting</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 5px;">☕</div>
+                            <div style="font-size: 0.8rem; font-weight: 600;">Coffee Break</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 5px;">🚀</div>
+                            <div style="font-size: 0.8rem; font-weight: 600;">Nunggu Deploy</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 5px;">🧠</div>
+                            <div style="font-size: 0.8rem; font-weight: 600;">Brain Refresh</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="games-grid">
+            <div class="game-card">
+                <div class="game-icon">⌨️</div>
+                <div class="game-title">Game Mengetik Cepat</div>
+                <div class="game-description">
+                    Perfect buat programmer yang gabut! Uji kecepatan mengetik dengan kata-kata coding yang familiar.
+                    Sambil main, skill typing juga ikut terasah. Win-win solution! 💻
+                </div>
+                <a href="game-mengetik-cepat.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">🏓</div>
+                <div class="game-title">Game Tangkap Bola</div>
+                <div class="game-description">
+                    Classic Pong vibes! Gerakkan paddle untuk menangkap bola yang jatuh.
+                    Cocok buat ngisi waktu sambil nunggu meeting atau coffee break! 🏓
+                </div>
+                <a href="game-tangkap-bola.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">🏃</div>
+                <div class="game-title">Game Hindari Rintangan</div>
+                <div class="game-description">
+                    Endless runner yang addictive! Lompat untuk hindari rintangan merah.
+                    Perfect buat ngisi waktu sambil nunggu deploy atau build process! 🏃‍♂️
+                </div>
+                <a href="game-hindari-rintangan.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">🎨</div>
+                <div class="game-title">Game Tebak Warna</div>
+                <div class="game-description">
+                    Brain training sambil gabut! Tebak nama warna yang ditampilkan dengan cepat.
+                    Cocok buat ngasah konsentrasi sebelum meeting penting! 🎨
+                </div>
+                <a href="game-tebak-warna.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">🧠</div>
+                <div class="game-title">Game Memory Card</div>
+                <div class="game-description">
+                    Memory game yang bikin otak fresh! Temukan pasangan kartu yang sama.
+                    Perfect buat ngisi waktu sambil nunggu code review atau testing! 🧠
+                </div>
+                <a href="game-memory-card.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">🐍</div>
+                <div class="game-title">Game Snake</div>
+                <div class="game-description">
+                    Nostalgia game klasik! Gerakkan ular untuk makan makanan dan hindari menabrak dinding.
+                    Cocok buat ngisi waktu sambil nunggu database migration atau API response! 🐍
+                </div>
+                <a href="game-snake.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">🚗</div>
+                <div class="game-title">Game Mobil Menghindar</div>
+                <div class="game-description">
+                    Racing game yang seru! Berkendara dan hindari mobil-mobil di depan.
+                    Perfect buat ngisi waktu sambil nunggu CI/CD pipeline atau deployment! 🚗
+                </div>
+                <a href="game-mobil-menghindar.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+
+            <div class="game-card">
+                <div class="game-icon">📈</div>
+                <div class="game-title">Game Trading</div>
+                <div class="game-description">
+                    Trading simulator yang seru! Tebak apakah harga akan naik atau turun.
+                    Perfect buat ngisi waktu sambil nunggu market analysis atau trading break! 📊
+                </div>
+                <a href="game-trading.html" class="play-button"><span>Mulai Bermain</span></a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Anti-Boring Office Games - Dibuat dengan ❤️ buat ngisi waktu gabut di kantor</p>
+            <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">
+                💡 Tips: Buka di tab baru biar gampang switch ke kerjaan asli!
+            </p>
+            <p style="margin-top: 5px; font-size: 0.7rem; opacity: 0.6;">
+                ⌨️ Keyboard Shortcut: Tekan angka 1-8 untuk langsung buka game, Escape untuk refresh
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk menghitung total high score dari semua game
+        function calculateTotalHighScore() {
+            const gameHighScores = {
+                'typing_highscore': 0,
+                'pong_highscore': 0,
+                'runner_highscore': 0,
+                'color_highscore': 0,
+                'memory_highscore': 0,
+                'snake_highscore': 0,
+                'car_highscore': 0,
+                'trading_highscore': 0
+            };
+
+            // Ambil high score dari localStorage untuk setiap game
+            Object.keys(gameHighScores).forEach(key => {
+                const score = localStorage.getItem(key);
+                if (score) {
+                    gameHighScores[key] = parseInt(score) || 0;
+                }
+            });
+
+            // Hitung total
+            const total = Object.values(gameHighScores).reduce((sum, score) => sum + score, 0);
+            return total;
+        }
+
+        // Update total high score display
+        function updateTotalHighScore() {
+            const totalScore = calculateTotalHighScore();
+            const totalScoreElement = document.getElementById('totalHighScore');
+            if (totalScoreElement) {
+                totalScoreElement.textContent = totalScore.toLocaleString();
+
+                // Tambahkan efek animasi saat update
+                totalScoreElement.style.transform = 'scale(1.2)';
+                totalScoreElement.style.color = '#ffd700';
+                setTimeout(() => {
+                    totalScoreElement.style.transform = 'scale(1)';
+                    totalScoreElement.style.color = '#ffd700';
+                }, 300);
+            }
+        }
+
+        // Fungsi untuk menampilkan detail high score
+        function showScoreDetails() {
+            const gameNames = {
+                'typing_highscore': '⌨️ Mengetik Cepat',
+                'pong_highscore': '🏓 Tangkap Bola',
+                'runner_highscore': '🏃 Hindari Rintangan',
+                'color_highscore': '🎨 Tebak Warna',
+                'memory_highscore': '🧠 Memory Card',
+                'snake_highscore': '🐍 Snake',
+                'car_highscore': '🚗 Mobil Menghindar',
+                'trading_highscore': '📈 Trading'
+            };
+
+            let details = '📊 Detail High Score:\n\n';
+            let total = 0;
+
+            Object.keys(gameNames).forEach(key => {
+                const score = parseInt(localStorage.getItem(key)) || 0;
+                total += score;
+                details += `${gameNames[key]}: ${score.toLocaleString()}\n`;
+            });
+
+            details += `\n🏆 Total: ${total.toLocaleString()}`;
+
+            // Buat tooltip
+            let tooltip = document.querySelector('.score-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'score-tooltip';
+                document.getElementById('totalScoreItem').appendChild(tooltip);
+            }
+
+            tooltip.innerHTML = details.replace(/\n/g, '<br>');
+            tooltip.classList.add('show');
+
+            // Sembunyikan tooltip setelah 3 detik
+            setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, 3000);
+        }
+
+        // Tambahkan efek interaktif
+        document.addEventListener('DOMContentLoaded', function () {
+            // Update total high score saat halaman dimuat
+            updateTotalHighScore();
+
+            // Update total high score setiap 2 detik (untuk real-time update)
+            setInterval(updateTotalHighScore, 2000);
+
+            // Update total high score saat window focus (ketika user kembali dari game)
+            window.addEventListener('focus', updateTotalHighScore);
+
+            // Update total high score saat visibility change (ketika tab menjadi aktif)
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    updateTotalHighScore();
+                }
+            });
+
+            // Tambahkan event listener untuk klik pada total high score
+            const totalScoreItem = document.getElementById('totalScoreItem');
+            if (totalScoreItem) {
+                totalScoreItem.addEventListener('click', showScoreDetails);
+
+                // Tambahkan efek hover
+                totalScoreItem.addEventListener('mouseenter', function () {
+                    this.style.transform = 'scale(1.05)';
+                });
+
+                totalScoreItem.addEventListener('mouseleave', function () {
+                    this.style.transform = 'scale(1)';
+                });
+            }
+
+            // Animasi saat halaman dimuat
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+
+            // Tambahkan efek hover dengan suara (opsional)
+            const playButtons = document.querySelectorAll('.play-button');
+            playButtons.forEach(button => {
+                button.addEventListener('mouseenter', function () {
+                    // Tambahkan efek visual tambahan
+                    this.style.transform = 'translateY(-2px) scale(1.05)';
+                });
+
+                button.addEventListener('mouseleave', function () {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Tambahkan efek klik dengan konfirmasi
+            playButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    // Tambahkan efek loading
+                    const originalText = this.querySelector('span').textContent;
+                    this.querySelector('span').textContent = 'Loading...';
+                    this.style.pointerEvents = 'none';
+
+                    setTimeout(() => {
+                        this.querySelector('span').textContent = originalText;
+                        this.style.pointerEvents = 'auto';
+                    }, 500);
+                });
+            });
+
+            // Tambahkan efek ripple untuk semua tombol
+            playButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    // Buat efek ripple
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s ease-out;
+                        pointer-events: none;
+                    `;
+
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+
+            // Tambahkan efek hover untuk game cards
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+
+                card.addEventListener('mouseleave', function () {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Tambahkan efek klik untuk game cards
+            cards.forEach(card => {
+                card.addEventListener('click', function () {
+                    const playButton = this.querySelector('.play-button');
+                    if (playButton) {
+                        playButton.click();
+                    }
+                });
+            });
+
+            // Tambahkan efek keyboard shortcut
+            document.addEventListener('keydown', function (e) {
+                // Tekan angka 1-8 untuk langsung buka game
+                const gameNumbers = ['1', '2', '3', '4', '5', '6', '7', '8'];
+                if (gameNumbers.includes(e.key)) {
+                    const gameIndex = parseInt(e.key) - 1;
+                    if (cards[gameIndex]) {
+                        const playButton = cards[gameIndex].querySelector('.play-button');
+                        if (playButton) {
+                            playButton.click();
+                        }
+                    }
+                }
+
+                // Tekan Escape untuk refresh halaman
+                if (e.key === 'Escape') {
+                    location.reload();
+                }
+            });
+
+            // Tambahkan efek scroll untuk floating shapes
+            window.addEventListener('scroll', function () {
+                const shapes = document.querySelectorAll('.shape');
+                const scrolled = window.pageYOffset;
+
+                shapes.forEach((shape, index) => {
+                    const speed = 0.5 + (index * 0.1);
+                    shape.style.transform =
+                        `translateY(${scrolled * speed}px) rotate(${scrolled * 0.1}deg)`;
+                });
+            });
+
+            // Tambahkan efek mouse movement untuk floating shapes
+            document.addEventListener('mousemove', function (e) {
+                const shapes = document.querySelectorAll('.shape');
+                const mouseX = e.clientX / window.innerWidth;
+                const mouseY = e.clientY / window.innerHeight;
+
+                shapes.forEach((shape, index) => {
+                    const moveX = (mouseX - 0.5) * 20 * (index + 1);
+                    const moveY = (mouseY - 0.5) * 20 * (index + 1);
+                    shape.style.transform += ` translate(${moveX}px, ${moveY}px)`;
+                });
+            });
+
+            // Tambahkan efek click untuk floating shapes
+            document.addEventListener('click', function (e) {
+                const shapes = document.querySelectorAll('.shape');
+                shapes.forEach(shape => {
+                    shape.style.animation = 'none';
+                    shape.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        shape.style.animation = 'float 6s ease-in-out infinite';
+                        shape.style.transform = '';
+                    }, 200);
+                });
+            });
+
+            // Tambahkan CSS untuk animasi ripple
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(2);
+                        opacity: 0;
+                    }
+                }
+                
+                .game-card {
+                    cursor: pointer;
+                }
+                
+                .game-card:hover {
+                    cursor: pointer;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+
+</html>

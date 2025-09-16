@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Memory Card</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .score {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            margin: 5px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: #4CAF50;
+        }
+
+        .game-board {
+            display: grid;
+            gap: 10px;
+            margin: 20px 0;
+            perspective: 1000px;
+        }
+
+        .game-board.easy {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .game-board.medium {
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .game-board.hard {
+            grid-template-columns: repeat(8, 1fr);
+        }
+
+        .card {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .card-front {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            z-index: 1000;
+        }
+
+        .game-over.hidden {
+            display: none;
+        }
+
+        .restart-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .moves {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            color: #ffd700;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                width: 60px;
+                height: 60px;
+            }
+
+            .card-face {
+                font-size: 1.5rem;
+            }
+
+            .game-board.easy {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .game-board.medium {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .game-board.hard {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn">← Kembali ke Menu</a>
+
+    <div class="header">
+        <h1>🧠 Memory Card</h1>
+        <div class="score">Skor: <span id="score">0</span> | Highscore: <span id="highscore">0</span></div>
+        <div class="moves">Moves: <span id="moves">0</span></div>
+        <div class="timer">Time: <span id="timer">0</span>s</div>
+    </div>
+
+    <div class="difficulty-selector">
+        <button class="difficulty-btn active" onclick="setDifficulty('easy')">Mudah (4x4)</button>
+        <button class="difficulty-btn" onclick="setDifficulty('medium')">Sedang (6x6)</button>
+        <button class="difficulty-btn" onclick="setDifficulty('hard')">Sulit (8x8)</button>
+    </div>
+
+    <div class="game-board easy" id="gameBoard"></div>
+
+    <div class="game-over hidden" id="gameOver">
+        <h2>Selamat!</h2>
+        <p>Skor: <span id="finalScore">0</span></p>
+        <p>Moves: <span id="finalMoves">0</span></p>
+        <p>Time: <span id="finalTime">0</span>s</p>
+        <button class="restart-btn" onclick="startGame()">Main Lagi</button>
+    </div>
+
+    <script>
+        const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔',
+            '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜',
+            '🦟', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟',
+            '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃',
+            '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐓', '🦃', '🦚',
+            '🦜', '🦢', '🦩', '🕊️', '🐇', '🦝', '🦨', '🦡', '🦦', '🦥', '🐁', '🐀', '🐿️', '🦔'
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let score = 0;
+        let highscore = localStorage.getItem('memory_highscore') || 0;
+        let difficulty = 'easy';
+        let gameStartTime;
+        let gameTimer;
+
+        // Tampilkan highscore saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('highscore').textContent = highscore;
+        });
+
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.className = `game-board ${level}`;
+
+            startGame();
+        }
+
+        function createCards() {
+            const boardSizes = {
+                easy: 16,
+                medium: 36,
+                hard: 64
+            };
+            const totalCards = boardSizes[difficulty];
+            const pairs = totalCards / 2;
+
+            cards = [];
+            const selectedEmojis = emojis.slice(0, pairs);
+
+            // Buat pasangan kartu
+            for (let i = 0; i < pairs; i++) {
+                cards.push({
+                    id: i,
+                    emoji: selectedEmojis[i],
+                    matched: false
+                });
+                cards.push({
+                    id: i + pairs,
+                    emoji: selectedEmojis[i],
+                    matched: false
+                });
+            }
+
+            // Acak urutan kartu
+            cards = cards.sort(() => Math.random() - 0.5);
+        }
+
+        function renderCards() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.index = index;
+                cardElement.onclick = () => flipCard(index);
+
+                cardElement.innerHTML = `
+                    <div class="card-face card-back">?</div>
+                    <div class="card-face card-front">${card.emoji}</div>
+                `;
+
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        function flipCard(index) {
+            const card = cards[index];
+            const cardElement = document.querySelector(`[data-index="${index}"]`);
+
+            if (card.matched || flippedCards.length >= 2 || cardElement.classList.contains('flipped')) {
+                return;
+            }
+
+            cardElement.classList.add('flipped');
+            flippedCards.push({
+                index,
+                card
+            });
+
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+
+                setTimeout(() => {
+                    checkMatch();
+                }, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [first, second] = flippedCards;
+
+            if (first.card.emoji === second.card.emoji) {
+                // Match!
+                cards[first.index].matched = true;
+                cards[second.index].matched = true;
+
+                document.querySelector(`[data-index="${first.index}"]`).classList.add('matched');
+                document.querySelector(`[data-index="${second.index}"]`).classList.add('matched');
+
+                matchedPairs++;
+                score += 10;
+                document.getElementById('score').textContent = score;
+
+                // Cek apakah game selesai
+                const totalPairs = cards.length / 2;
+                if (matchedPairs === totalPairs) {
+                    endGame();
+                }
+            } else {
+                // No match
+                document.querySelector(`[data-index="${first.index}"]`).classList.remove('flipped');
+                document.querySelector(`[data-index="${second.index}"]`).classList.remove('flipped');
+            }
+
+            flippedCards = [];
+        }
+
+        function startTimer() {
+            gameStartTime = Date.now();
+            gameTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+                document.getElementById('timer').textContent = elapsed;
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(gameTimer);
+            const finalTime = Math.floor((Date.now() - gameStartTime) / 1000);
+
+            if (score > highscore) {
+                highscore = score;
+                localStorage.setItem('memory_highscore', highscore);
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalMoves').textContent = moves;
+            document.getElementById('finalTime').textContent = finalTime;
+            document.getElementById('gameOver').classList.remove('hidden');
+        }
+
+        function startGame() {
+            matchedPairs = 0;
+            moves = 0;
+            score = 0;
+            flippedCards = [];
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('highscore').textContent = highscore;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('timer').textContent = 0;
+            document.getElementById('gameOver').classList.add('hidden');
+
+            createCards();
+            renderCards();
+            startTimer();
+        }
+
+        // Mulai game otomatis
+        startGame();
+    </script>
+</body>
+
+</html>

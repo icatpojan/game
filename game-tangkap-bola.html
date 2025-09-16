@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Game Tangkap Bola</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            color: white;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+
+        #game {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #222;
+        }
+
+        .ball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: crimson;
+        }
+
+        .paddle {
+            position: absolute;
+            bottom: 20px;
+            width: 100px;
+            height: 20px;
+            background: dodgerblue;
+            border-radius: 10px;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        #overlay button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game">
+        <div id="status">Skor: 0 | Highscore: 0</div>
+        <div id="overlay">
+            <div id="message">Klik untuk mulai!</div>
+            <button onclick="startGame()">Mulai</button>
+            <button onclick="window.location.href='index.html'" style="background: #666; margin-top: 10px;">Kembali ke
+                Menu</button>
+        </div>
+    </div>
+
+    <script>
+        const game = document.getElementById("game");
+        const statusText = document.getElementById("status");
+        const overlay = document.getElementById("overlay");
+        const message = document.getElementById("message");
+
+        let paddle, ball;
+        let score = 0;
+        let highscore = localStorage.getItem("catch_highscore") || 0;
+        let gameOver = true;
+        let speed = 3;
+        let paddleX = 0;
+        let speedIncrease = 0.1;
+
+        // Tampilkan highscore saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function () {
+            statusText.textContent = `Skor: ${score} | Highscore: ${highscore}`;
+        });
+
+        function createPaddle() {
+            paddle = document.createElement("div");
+            paddle.className = "paddle";
+            paddleX = (window.innerWidth / 2) - 50;
+            paddle.style.left = paddleX + "px";
+            game.appendChild(paddle);
+        }
+
+        function createBall() {
+            ball = document.createElement("div");
+            ball.className = "ball";
+            ball.x = Math.random() * (window.innerWidth - 30);
+            ball.y = -30;
+            ball.style.left = ball.x + "px";
+            ball.style.top = ball.y + "px";
+            game.appendChild(ball);
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // gerakin bola
+            ball.y += speed;
+            ball.style.top = ball.y + "px";
+
+            // cek kena paddle
+            const paddleRect = paddle.getBoundingClientRect();
+            const ballRect = ball.getBoundingClientRect();
+
+            if (
+                ballRect.bottom >= paddleRect.top &&
+                ballRect.left < paddleRect.right &&
+                ballRect.right > paddleRect.left
+            ) {
+                // kena
+                score++;
+                speed += speedIncrease; // Tingkatkan kecepatan setiap kali menangkap bola
+                statusText.textContent = `Skor: ${score} | Highscore: ${highscore}`;
+                game.removeChild(ball);
+                createBall();
+            }
+
+            // jatuh ke bawah
+            if (ball.y > window.innerHeight) {
+                endGame();
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function movePaddle(dir) {
+            if (gameOver) return;
+            const step = 20;
+            paddleX += dir * step;
+            paddleX = Math.max(0, Math.min(window.innerWidth - 100, paddleX));
+            paddle.style.left = paddleX + "px";
+        }
+
+        function endGame() {
+            gameOver = true;
+            game.removeChild(ball);
+            if (score > highscore) {
+                highscore = score;
+                localStorage.setItem("catch_highscore", highscore);
+            }
+            message.textContent = `Game Over! Skor: ${score} | Highscore: ${highscore}`;
+            overlay.style.display = "flex";
+
+            // Tambahkan tombol main lagi
+            const oldButton = overlay.querySelector("button[onclick='startGame()']");
+            if (oldButton) {
+                oldButton.textContent = "Main Lagi";
+            }
+        }
+
+        function startGame() {
+            overlay.style.display = "none";
+            score = 0;
+            speed = 3; // Reset kecepatan
+            statusText.textContent = `Skor: ${score} | Highscore: ${highscore}`;
+            gameOver = false;
+            if (paddle) game.removeChild(paddle);
+            createPaddle();
+            createBall();
+            update();
+        }
+
+        // kontrol
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft") movePaddle(-1);
+            if (e.key === "ArrowRight") movePaddle(1);
+        });
+    </script>
+</body>
+
+</html>
